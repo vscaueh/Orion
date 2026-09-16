@@ -1,0 +1,19 @@
+# dependências
+node_modules/
+
+# builds
+.next/
+dist/
+out/
+
+# ambiente — segredos nunca vão para o git
+.env
+.env.local
+.env.*.local
+
+# logs e temporários
+*.log
+.DS_Store
+
+# supabase local
+supabase/.temp/
