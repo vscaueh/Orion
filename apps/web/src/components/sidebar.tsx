@@ -1,11 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FLOORS } from "@orion/core";
+import { createClient } from "@/lib/supabase/client";
 
-export function Sidebar() {
+export function Sidebar({ email }: { email: string | null }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function sair() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/entrar");
+    router.refresh();
+  }
 
   return (
     <aside className="flex h-screen w-56 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950">
@@ -32,6 +41,17 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="border-t border-zinc-800 px-4 py-3">
+        {email ? (
+          <p className="truncate text-xs text-zinc-500">{email}</p>
+        ) : null}
+        <button
+          onClick={sair}
+          className="mt-1 text-xs text-zinc-400 hover:text-zinc-100"
+        >
+          Sair
+        </button>
+      </div>
     </aside>
   );
 }
