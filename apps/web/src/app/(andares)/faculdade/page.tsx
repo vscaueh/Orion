@@ -52,15 +52,27 @@ export default async function FaculdadePage() {
             ) : (
               <ul className="divide-y divide-zinc-800 rounded-md border border-zinc-800">
                 {cadeiras.map((c) => (
-                  <li key={c.id} className="flex items-baseline gap-3 px-4 py-3">
-                    <span className="text-sm text-zinc-100">{c.name}</span>
-                    {c.code ? (
-                      <span className="text-xs text-zinc-500">{c.code}</span>
-                    ) : null}
-                    {c.professor ? (
-                      <span className="ml-auto text-xs text-zinc-500">
-                        {c.professor}
-                      </span>
+                  <li key={c.id} className="px-4 py-3">
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-sm text-zinc-100">{c.name}</span>
+                      {c.code ? (
+                        <span className="text-xs text-zinc-500">{c.code}</span>
+                      ) : null}
+                      {c.professor ? (
+                        <span className="ml-auto text-xs text-zinc-500">
+                          {c.professor}
+                        </span>
+                      ) : null}
+                    </div>
+                    {c.total_hours ? (
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {c.total_hours}h · pode faltar até{" "}
+                        <span className="text-zinc-400">
+                          {faculdade.limiteFaltasEmHoras(c.total_hours)}{" "}
+                          horas-aula
+                        </span>{" "}
+                        (25%)
+                      </p>
                     ) : null}
                   </li>
                 ))}
@@ -89,11 +101,11 @@ export default async function FaculdadePage() {
                   className={`${inputClass} flex-1 min-w-48`}
                 />
                 <input
-                  name="absence_limit"
+                  name="total_hours"
                   type="number"
                   min="1"
-                  placeholder="Limite de faltas"
-                  className={`${inputClass} w-36`}
+                  placeholder="Carga horária (64)"
+                  className={`${inputClass} w-40`}
                 />
               </div>
               <button type="submit" className={buttonClass}>

@@ -37,7 +37,7 @@ export const criarSemestre = defineAction({
 export const criarCadeira = defineAction({
   name: "faculdade.criar_cadeira",
   description:
-    "Cria uma cadeira (disciplina) em um semestre, com nome e, opcionalmente, código, professor, cor e limite de faltas.",
+    "Cria uma cadeira (disciplina) em um semestre, com nome e, opcionalmente, código, professor, cor e carga horária em horas-aula.",
   input: courseInputSchema,
   mutation: true,
   requiresApproval: true,

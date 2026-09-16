@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   aprovado,
   faltasRestantes,
+  horasAulaPorEncontro,
+  limiteFaltasEmEncontros,
+  limiteFaltasEmHoras,
   notaNecessariaAv2,
   notaNecessariaAv3,
   podeFazerAv3,
@@ -70,17 +73,47 @@ describe("aprovado", () => {
   });
 });
 
+describe("limiteFaltasEmHoras", () => {
+  it("cadeira de 64h: 16 horas-aula de falta", () => {
+    expect(limiteFaltasEmHoras(64)).toBe(16);
+  });
+
+  it("carga que não divide certo arredonda para baixo", () => {
+    expect(limiteFaltasEmHoras(30)).toBe(7); // 7,5
+  });
+});
+
+describe("horasAulaPorEncontro", () => {
+  it("100 minutos valem 2 horas-aula", () => {
+    expect(horasAulaPorEncontro(100)).toBe(2);
+  });
+
+  it("1h40 marcada como 1h50 ainda conta 2", () => {
+    expect(horasAulaPorEncontro(110)).toBe(2);
+  });
+});
+
+describe("limiteFaltasEmEncontros", () => {
+  it("64h com encontros de 100 min: 8 aulas", () => {
+    expect(limiteFaltasEmEncontros(64, 100)).toBe(8);
+  });
+
+  it("80h com encontros de 50 min: 20 aulas", () => {
+    expect(limiteFaltasEmEncontros(80, 50)).toBe(20);
+  });
+
+  it("encontro curto demais para uma hora-aula: null", () => {
+    expect(limiteFaltasEmEncontros(64, 10)).toBeNull();
+  });
+});
+
 describe("faltasRestantes", () => {
-  it("32 aulas: limite de 8 faltas", () => {
-    expect(faltasRestantes(32, 0)).toBe(8);
-    expect(faltasRestantes(32, 5)).toBe(3);
+  it("desconta as faltas do limite", () => {
+    expect(faltasRestantes(8, 0)).toBe(8);
+    expect(faltasRestantes(8, 5)).toBe(3);
   });
 
   it("limite estourado fica negativo", () => {
-    expect(faltasRestantes(32, 10)).toBe(-2);
-  });
-
-  it("total não múltiplo de 4 arredonda para baixo", () => {
-    expect(faltasRestantes(30, 0)).toBe(7); // 30 * 0,25 = 7,5
+    expect(faltasRestantes(8, 10)).toBe(-2);
   });
 });

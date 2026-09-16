@@ -24,7 +24,8 @@ export const courseInputSchema = z.object({
   code: z.string().nullish(),
   professor: z.string().nullish(),
   color: z.string().nullish(),
-  absence_limit: z.number().int().positive().nullish(),
+  /** Carga horária em horas-aula (ex.: 64) — base do limite de faltas. */
+  total_hours: z.number().int().positive().nullish(),
 });
 export type CourseInput = z.input<typeof courseInputSchema>;
 
@@ -34,5 +35,5 @@ export interface Course extends BaseRow {
   code: string | null;
   professor: string | null;
   color: string | null;
-  absence_limit: number | null;
+  total_hours: number | null;
 }

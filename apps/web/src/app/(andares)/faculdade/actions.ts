@@ -34,13 +34,13 @@ export async function criarSemestreAction(formData: FormData): Promise<void> {
 
 export async function criarCadeiraAction(formData: FormData): Promise<void> {
   const ctx = await contexto();
-  const limite = texto(formData, "absence_limit");
+  const carga = texto(formData, "total_hours");
   await runAction(faculdade.criarCadeira, ctx, {
     semester_id: texto(formData, "semester_id"),
     name: texto(formData, "name"),
     code: texto(formData, "code") || null,
     professor: texto(formData, "professor") || null,
-    absence_limit: limite ? Number(limite) : null,
+    total_hours: carga ? Number(carga) : null,
   });
   revalidatePath("/faculdade");
 }

@@ -12,7 +12,11 @@ export const MEDIA_MINIMA_PARA_AV3 = 4;
 export const NOTA_MINIMA_AV3 = 4;
 export const MEDIA_FINAL = 5;
 export const NOTA_MAXIMA = 10;
-export const LIMITE_FALTAS = 0.25;
+export const PERCENTUAL_MAXIMO_FALTAS = 0.25;
+
+// Uma hora-aula dura 50 minutos — é a unidade em que a carga horária
+// é contada (uma cadeira de 64h são 64 horas-aula, não 64 relógios).
+export const MINUTOS_POR_HORA_AULA = 50;
 
 export function mediaParciais(av1: number, av2: number): number {
   return (av1 + av2) / 2;
@@ -56,12 +60,34 @@ export function aprovado(av1: number, av2: number, av3: number): boolean {
 }
 
 /**
- * Quantas faltas ainda cabem no limite de 25%.
- * Negativo = limite estourado.
+ * Limite de faltas em horas-aula: 25% da carga horária da cadeira.
+ * Uma cadeira de 64h permite faltar 16 horas-aula.
  */
-export function faltasRestantes(
-  totalAulas: number,
-  faltasDadas: number,
-): number {
-  return Math.floor(totalAulas * LIMITE_FALTAS) - faltasDadas;
+export function limiteFaltasEmHoras(cargaHoraria: number): number {
+  return Math.floor(cargaHoraria * PERCENTUAL_MAXIMO_FALTAS);
+}
+
+/** Quantas horas-aula vale um encontro de N minutos. */
+export function horasAulaPorEncontro(minutos: number): number {
+  return Math.round(minutos / MINUTOS_POR_HORA_AULA);
+}
+
+/**
+ * Limite de faltas em encontros (dias de aula), que é como se falta na
+ * prática. Depende de quanto dura cada encontro — vem do horário da
+ * cadeira. Retorna null quando o encontro é curto demais para valer
+ * uma hora-aula (dado inconsistente).
+ */
+export function limiteFaltasEmEncontros(
+  cargaHoraria: number,
+  minutosPorEncontro: number,
+): number | null {
+  const horasPorEncontro = horasAulaPorEncontro(minutosPorEncontro);
+  if (horasPorEncontro <= 0) return null;
+  return Math.floor(limiteFaltasEmHoras(cargaHoraria) / horasPorEncontro);
+}
+
+/** Quantas faltas ainda cabem. Negativo = limite estourado. */
+export function faltasRestantes(limite: number, faltasDadas: number): number {
+  return limite - faltasDadas;
 }
