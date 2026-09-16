@@ -17,3 +17,6 @@ out/
 
 # supabase local
 supabase/.temp/
+
+# typescript incremental
+*.tsbuildinfo

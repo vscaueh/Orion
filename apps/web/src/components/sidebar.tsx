@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FLOORS } from "@/floors";
+import { FLOORS } from "@orion/core";
 
 export function Sidebar() {
   const pathname = usePathname();

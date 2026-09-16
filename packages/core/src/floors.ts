@@ -1,13 +1,15 @@
-// Registro dos andares do prédio. Vai migrar para packages/core assim que
-// o pacote existir, para que web e worker leiam a mesma lista.
+import type { FloorId } from "./types";
 
 export interface Floor {
-  id: string;
+  id: FloorId;
   nome: string;
   rota: string;
   descricao: string;
 }
 
+// Fonte única da lista de andares — web e worker leem daqui.
+// As pastas src/floors/<andar>/ (schema, actions, queries) nascem na
+// fase de cada andar, para não carregar estrutura vazia.
 export const FLOORS: readonly Floor[] = [
   { id: "hoje", nome: "Hoje", rota: "/", descricao: "Seu dia em uma tela: próxima aula, provas, hábitos, prazos e propostas da Orion." },
   { id: "faculdade", nome: "Faculdade", rota: "/faculdade", descricao: "Semestres, cadeiras, horário, avaliações e faltas." },

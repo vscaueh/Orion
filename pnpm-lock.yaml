@@ -10,6 +10,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@orion/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       next:
         specifier: ^15.5.0
         version: 15.5.25(@types/node@22.20.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -35,6 +38,12 @@ importers:
       tailwindcss:
         specifier: ^4.1.0
         version: 4.3.3
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/core:
+    devDependencies:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

@@ -1,4 +1,4 @@
-import { FLOORS } from "@/floors";
+import { FLOORS } from "@orion/core";
 
 // Placeholder da Fase 0: cada andar mostra nome e descrição até ganhar
 // sua tela de verdade na fase correspondente.
