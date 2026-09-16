@@ -12,7 +12,12 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
+  // Atrás de um proxy (Codespaces, Vercel), request.url enxerga
+  // localhost; o endereço público chega no header x-forwarded-host.
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const origin = forwardedHost ? `https://${forwardedHost}` : url.origin;
+
   // O middleware decide o destino final: dono vai para o Hoje,
   // qualquer outra conta cai em /acesso-negado.
-  return NextResponse.redirect(new URL("/", url.origin));
+  return NextResponse.redirect(`${origin}/`);
 }
