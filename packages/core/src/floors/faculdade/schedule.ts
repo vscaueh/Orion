@@ -1,3 +1,7 @@
+import { diaDaSemana } from "../../tempo";
+
+export { diaDaSemana };
+
 // Utilidades de horário. Ficam separadas das notas porque servem tanto
 // ao cálculo de faltas quanto à montagem da semana e do Hoje.
 
@@ -70,11 +74,6 @@ export function horasAulaPorEncontro(minutos: number): number {
   return Math.round(minutos / MINUTOS_POR_HORA_AULA);
 }
 
-/** 0 = domingo … 6 = sábado, a partir de uma data ISO (YYYY-MM-DD). */
-export function diaDaSemana(dataIso: string): number {
-  const [ano = 0, mes = 1, dia = 1] = dataIso.split("-").map(Number);
-  return new Date(Date.UTC(ano, mes - 1, dia)).getUTCDay();
-}
 
 /**
  * Quanto custa, em horas-aula, faltar num dia — que é como a UNIFOR

@@ -35,4 +35,5 @@ O login é restrito a um único e-mail (`OWNER_EMAIL`) — o site é pessoal por
 ## Status
 
 - ✅ **Fase 0 — Fundação**: monorepo, sidebar com os andares, login Google travado no dono, RLS ([docs/fase-0.md](./docs/fase-0.md))
-- 🔨 **Fase 1 — Faculdade + Hoje**: em andamento
+- ✅ **Fase 1 — Faculdade + Hoje**: semestre, cadeiras, horários, notas e faltas; Hoje com próxima aula e provas próximas ([docs/fase-1.md](./docs/fase-1.md))
+- 🔨 **Fase 2 — Rotina + Projetos**: em andamento
