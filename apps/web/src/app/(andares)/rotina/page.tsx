@@ -1,7 +1,9 @@
 import { agoraNoFuso, faculdade, rotina } from "@orion/core";
 import { createClient } from "@/lib/supabase/server";
 import {
+  arquivarBlocoAction,
   arquivarHabitoAction,
+  criarBlocoAction,
   criarHabitoAction,
   editarHabitoAction,
   marcarHabitoAction,
@@ -23,9 +25,10 @@ export default async function RotinaPage() {
 
   const ctx = { supabase, userId: user.id };
   const agora = agoraNoFuso();
-  const [habitos, registros] = await Promise.all([
+  const [habitos, registros, blocos] = await Promise.all([
     rotina.listarHabitos(ctx),
     rotina.listarRegistros(ctx, agora.dataIso),
+    rotina.listarBlocos(ctx),
   ]);
 
   const feitosPorHabito = new Map<string, Set<string>>();
@@ -86,6 +89,8 @@ export default async function RotinaPage() {
           </ul>
         </section>
       ) : null}
+
+      <SemanaTipo blocos={blocos} hoje={agora.diaSemana} />
 
       <section className="space-y-3">
         <h2 className="text-lg font-medium text-zinc-100">Novo hábito</h2>
@@ -211,6 +216,128 @@ function Habito({
         </form>
       </details>
     </li>
+  );
+}
+
+function SemanaTipo({
+  blocos,
+  hoje,
+}: {
+  blocos: rotina.TimeBlock[];
+  hoje: number;
+}) {
+  return (
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-lg font-medium text-zinc-100">Semana-tipo</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          O que já está ocupado na semana. As aulas vêm da Faculdade; o
+          resto você cadastra aqui. O que sobra são suas janelas livres.
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {faculdade.DIAS_SEMANA.map((nome, dia) => {
+          const doDia = blocos.filter((b) => b.weekday === dia);
+          const janelas = rotina.janelasLivres(
+            rotina.intervalosDoDia(blocos, dia),
+          );
+          const livre = rotina.totalLivre(janelas);
+
+          return (
+            <div key={nome}>
+              <div className="flex items-baseline gap-3">
+                <h3
+                  className={`text-sm ${dia === hoje ? "text-zinc-100" : "text-zinc-400"}`}
+                >
+                  {nome}
+                  {dia === hoje ? " · hoje" : ""}
+                </h3>
+                <span className="text-xs text-zinc-600">
+                  {rotina.descreverDuracao(livre)} livre
+                </span>
+              </div>
+
+              <ul className="mt-1 space-y-0.5">
+                {doDia.map((bloco) => (
+                  <li
+                    key={bloco.id}
+                    className="flex items-center gap-2 text-xs text-zinc-500"
+                  >
+                    <span>
+                      {faculdade.formatarHora(bloco.starts_at)}–
+                      {faculdade.formatarHora(bloco.ends_at)} · {bloco.type}
+                    </span>
+                    {bloco.source === "manual" ? (
+                      <BotaoRemover id={bloco.id} />
+                    ) : (
+                      <span
+                        className="text-zinc-700"
+                        title="Vem do horário da cadeira, na Faculdade"
+                      >
+                        (aula)
+                      </span>
+                    )}
+                  </li>
+                ))}
+                {janelas.map((janela) => (
+                  <li
+                    key={`livre-${janela.inicio}`}
+                    className="text-xs text-emerald-500/70"
+                  >
+                    {rotina.formatarMinutos(janela.inicio)}–
+                    {rotina.formatarMinutos(janela.fim)} · livre (
+                    {rotina.descreverDuracao(rotina.duracao(janela))})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+
+      <details>
+        <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300">
+          Adicionar bloco
+        </summary>
+        <form action={criarBlocoAction} className="mt-3 flex flex-wrap gap-2">
+          <select name="type" required className={inputClass}>
+            {rotina.TIPOS_DE_BLOCO.filter((t) => t !== "aula").map((tipo) => (
+              <option key={tipo} value={tipo}>
+                {tipo}
+              </option>
+            ))}
+          </select>
+          <select name="weekday" required className={inputClass}>
+            {faculdade.DIAS_SEMANA.map((nome, i) => (
+              <option key={nome} value={i}>
+                {nome}
+              </option>
+            ))}
+          </select>
+          <input name="starts_at" type="time" required className={inputClass} />
+          <input name="ends_at" type="time" required className={inputClass} />
+          <button type="submit" className={buttonClass}>
+            Salvar
+          </button>
+        </form>
+      </details>
+    </section>
+  );
+}
+
+function BotaoRemover({ id }: { id: string }) {
+  return (
+    <form action={arquivarBlocoAction} className="inline">
+      <input type="hidden" name="id" value={id} />
+      <button
+        type="submit"
+        title="Remover bloco"
+        className="text-zinc-600 transition-colors hover:text-red-400"
+      >
+        ×
+      </button>
+    </form>
   );
 }
 

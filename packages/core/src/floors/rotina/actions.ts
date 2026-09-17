@@ -3,8 +3,10 @@ import {
   habitInputSchema,
   habitLogInputSchema,
   habitUpdateSchema,
+  timeBlockInputSchema,
   type Habit,
   type HabitLog,
+  type TimeBlock,
 } from "./schema";
 import { z } from "zod";
 
@@ -81,5 +83,41 @@ export const arquivarHabito = defineAction({
       .eq("id", id)
       .eq("user_id", userId);
     if (error) throw new Error(`Erro ao arquivar hábito: ${error.message}`);
+  },
+});
+
+export const criarBloco = defineAction({
+  name: "rotina.criar_bloco",
+  description:
+    "Adiciona um bloco à semana-tipo: tipo (trabalho, treino, sono, refeição, compromisso), dia da semana e horário.",
+  input: timeBlockInputSchema,
+  mutation: true,
+  requiresApproval: true,
+  async execute({ supabase, userId }, input) {
+    const { data, error } = await supabase
+      .from("time_blocks")
+      .insert({ ...input, source: "manual", user_id: userId })
+      .select()
+      .single<TimeBlock>();
+    if (error) throw new Error(`Erro ao criar bloco: ${error.message}`);
+    return data;
+  },
+});
+
+export const arquivarBloco = defineAction({
+  name: "rotina.arquivar_bloco",
+  description:
+    "Remove um bloco da semana-tipo. Blocos de aula saem pela Faculdade, junto com o horário que os gerou.",
+  input: idSchema,
+  mutation: true,
+  requiresApproval: true,
+  async execute({ supabase, userId }, { id }) {
+    const { error } = await supabase
+      .from("time_blocks")
+      .update({ archived_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("user_id", userId)
+      .eq("source", "manual"); // os gerados pertencem à Faculdade
+    if (error) throw new Error(`Erro ao remover bloco: ${error.message}`);
   },
 });

@@ -1,6 +1,6 @@
 import type { ActionContext } from "../../action";
 import { somarDias } from "../../tempo";
-import type { Habit, HabitLog } from "./schema";
+import type { Habit, HabitLog, TimeBlock } from "./schema";
 
 export async function listarHabitos(ctx: ActionContext): Promise<Habit[]> {
   const { data, error } = await ctx.supabase
@@ -33,5 +33,17 @@ export async function listarRegistros(
     .is("archived_at", null)
     .returns<HabitLog[]>();
   if (error) throw new Error(`Erro ao listar registros: ${error.message}`);
+  return data;
+}
+
+export async function listarBlocos(ctx: ActionContext): Promise<TimeBlock[]> {
+  const { data, error } = await ctx.supabase
+    .from("time_blocks")
+    .select("*")
+    .is("archived_at", null)
+    .order("weekday")
+    .order("starts_at")
+    .returns<TimeBlock[]>();
+  if (error) throw new Error(`Erro ao listar blocos: ${error.message}`);
   return data;
 }

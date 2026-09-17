@@ -64,3 +64,22 @@ export async function arquivarHabitoAction(formData: FormData): Promise<void> {
   revalidatePath("/rotina");
   revalidatePath("/");
 }
+
+export async function criarBlocoAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  await runAction(rotina.criarBloco, ctx, {
+    type: texto(formData, "type"),
+    weekday: Number(texto(formData, "weekday")),
+    starts_at: texto(formData, "starts_at"),
+    ends_at: texto(formData, "ends_at"),
+  });
+  revalidatePath("/rotina");
+  revalidatePath("/");
+}
+
+export async function arquivarBlocoAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  await runAction(rotina.arquivarBloco, ctx, { id: texto(formData, "id") });
+  revalidatePath("/rotina");
+  revalidatePath("/");
+}

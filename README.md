@@ -30,6 +30,8 @@ pnpm dev
 
 As migrations são aplicadas com a [CLI do Supabase](https://supabase.com/docs/guides/cli): `supabase link` e `supabase db push`.
 
+> Em Codespaces, o token do `supabase login` se perde quando o container reinicia. Guardar um token de acesso como secret do Codespaces (`SUPABASE_ACCESS_TOKEN`) evita ter que refazer o login toda vez.
+
 O login é restrito a um único e-mail (`OWNER_EMAIL`) — o site é pessoal por design. Uma rota `/demo` com dados fictícios está planejada para o final do projeto.
 
 ## Status
