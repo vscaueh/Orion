@@ -1,4 +1,5 @@
 import { faculdade, hoje } from "@orion/core";
+import { saudacao } from "@/lib/saudacao";
 import { createClient } from "@/lib/supabase/server";
 
 // O Hoje é recalculado a cada visita: o "agora" muda o tempo todo.
@@ -19,7 +20,8 @@ export default async function HojePage() {
       <header>
         <h1 className="text-2xl font-semibold text-zinc-50">Hoje</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          {saudacao(resumo.agora.minutos)}, {diaPorExtenso(resumo.agora)}.
+          {saudacao(resumo.agora.minutos, process.env.OWNER_NAME ?? null)} ·{" "}
+          {diaPorExtenso(resumo.agora)}
         </p>
       </header>
 
@@ -76,12 +78,6 @@ export default async function HojePage() {
       ) : null}
     </div>
   );
-}
-
-function saudacao(minutos: number): string {
-  if (minutos < 12 * 60) return "Bom dia";
-  if (minutos < 18 * 60) return "Boa tarde";
-  return "Boa noite";
 }
 
 function diaPorExtenso({ dataIso, diaSemana }: { dataIso: string; diaSemana: number }) {

@@ -50,3 +50,13 @@ export function somarDias(dataIso: string, dias: number): string {
   const d = new Date(Date.UTC(ano, mes - 1, dia + dias));
   return d.toISOString().slice(0, 10);
 }
+
+export type PeriodoDoDia = "madrugada" | "manha" | "tarde" | "noite";
+
+/** Em que parte do dia estão N minutos desde a meia-noite. */
+export function periodoDoDia(minutos: number): PeriodoDoDia {
+  if (minutos < 5 * 60) return "madrugada";
+  if (minutos < 12 * 60) return "manha";
+  if (minutos < 18 * 60) return "tarde";
+  return "noite";
+}
