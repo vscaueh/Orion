@@ -1,8 +1,10 @@
 import { defineAction } from "../../action";
 import {
+  absenceInputSchema,
   classSlotInputSchema,
   courseInputSchema,
   semesterInputSchema,
+  type Absence,
   type ClassSlot,
   type Course,
   type Semester,
@@ -85,6 +87,24 @@ export const criarHorario = defineAction({
       throw new Error(`Erro ao gerar bloco da semana: ${erroBloco.message}`);
     }
 
+    return data;
+  },
+});
+
+export const registrarFalta = defineAction({
+  name: "faculdade.registrar_falta",
+  description:
+    "Registra uma falta em uma cadeira numa data. O peso em horas-aula vem do horário daquele dia.",
+  input: absenceInputSchema,
+  mutation: true,
+  requiresApproval: true,
+  async execute({ supabase, userId }, input) {
+    const { data, error } = await supabase
+      .from("absences")
+      .insert({ ...input, user_id: userId })
+      .select()
+      .single<Absence>();
+    if (error) throw new Error(`Erro ao registrar falta: ${error.message}`);
     return data;
   },
 });

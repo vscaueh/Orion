@@ -1,5 +1,5 @@
 import type { ActionContext } from "../../action";
-import type { ClassSlot, Course, Semester } from "./schema";
+import type { Absence, ClassSlot, Course, Semester } from "./schema";
 
 // Leituras não são actions (não mutam nada, não precisam de aprovação);
 // são funções simples sobre o mesmo contexto.
@@ -47,5 +47,21 @@ export async function listarHorarios(
     .order("starts_at")
     .returns<ClassSlot[]>();
   if (error) throw new Error(`Erro ao listar horários: ${error.message}`);
+  return data;
+}
+
+export async function listarFaltas(
+  ctx: ActionContext,
+  courseIds: readonly string[],
+): Promise<Absence[]> {
+  if (courseIds.length === 0) return [];
+  const { data, error } = await ctx.supabase
+    .from("absences")
+    .select("*")
+    .in("course_id", courseIds)
+    .is("archived_at", null)
+    .order("date", { ascending: false })
+    .returns<Absence[]>();
+  if (error) throw new Error(`Erro ao listar faltas: ${error.message}`);
   return data;
 }

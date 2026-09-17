@@ -64,3 +64,16 @@ export interface ClassSlot extends BaseRow {
   ends_at: string;
   location: string | null;
 }
+
+export const absenceInputSchema = z.object({
+  course_id: z.uuid(),
+  date: z.iso.date(),
+  justified: z.boolean().default(false),
+});
+export type AbsenceInput = z.input<typeof absenceInputSchema>;
+
+export interface Absence extends BaseRow {
+  course_id: string;
+  date: string;
+  justified: boolean;
+}

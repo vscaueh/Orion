@@ -4,6 +4,7 @@ import {
   criarCadeiraAction,
   criarHorarioAction,
   criarSemestreAction,
+  registrarFaltaAction,
 } from "./actions";
 
 const inputClass =
@@ -22,10 +23,11 @@ export default async function FaculdadePage() {
   const semestres = await faculdade.listarSemestres(ctx);
   const ativo = semestres.find((s) => s.active) ?? null;
   const cadeiras = ativo ? await faculdade.listarCadeiras(ctx, ativo.id) : [];
-  const horarios = await faculdade.listarHorarios(
-    ctx,
-    cadeiras.map((c) => c.id),
-  );
+  const idsCadeiras = cadeiras.map((c) => c.id);
+  const [horarios, faltas] = await Promise.all([
+    faculdade.listarHorarios(ctx, idsCadeiras),
+    faculdade.listarFaltas(ctx, idsCadeiras),
+  ]);
 
   return (
     <div className="max-w-2xl space-y-10 p-8">
@@ -64,6 +66,7 @@ export default async function FaculdadePage() {
                     key={cadeira.id}
                     cadeira={cadeira}
                     horarios={horarios.filter((h) => h.course_id === cadeira.id)}
+                    faltas={faltas.filter((f) => f.course_id === cadeira.id)}
                   />
                 ))}
               </ul>
@@ -121,10 +124,24 @@ export default async function FaculdadePage() {
 function Cadeira({
   cadeira,
   horarios,
+  faltas,
 }: {
   cadeira: faculdade.Course;
   horarios: faculdade.ClassSlot[];
+  faltas: faculdade.Absence[];
 }) {
+  // O peso de cada falta sai do horário da cadeira naquele dia, então o
+  // número acompanha a grade atual — é a mesma contagem do portal da
+  // UNIFOR, que registra uma falta por hora-aula.
+  const horasFaltadas = faltas.reduce(
+    (total, f) => total + faculdade.horasAulaEmData(f.date, horarios),
+    0,
+  );
+  const limite = cadeira.total_hours
+    ? faculdade.limiteFaltasEmHoras(cadeira.total_hours)
+    : null;
+  const restantes =
+    limite === null ? null : faculdade.faltasRestantes(limite, horasFaltadas);
   return (
     <li className="rounded-md border border-zinc-800 px-4 py-3">
       <div className="flex items-baseline gap-3">
@@ -139,13 +156,12 @@ function Cadeira({
         ) : null}
       </div>
 
-      {cadeira.total_hours ? (
+      {limite !== null ? (
         <p className="mt-1 text-xs text-zinc-500">
-          {cadeira.total_hours}h · pode faltar até{" "}
-          <span className="text-zinc-400">
-            {descreverLimiteFaltas(cadeira.total_hours, horarios)}
-          </span>{" "}
-          (25%)
+          {cadeira.total_hours}h · limite de {limite} faltas (25%) ·{" "}
+          <span className={corDoSaldo(restantes!, limite)}>
+            {horasFaltadas} usadas, {restantes} restantes
+          </span>
         </p>
       ) : null}
 
@@ -161,6 +177,36 @@ function Cadeira({
           ))}
         </ul>
       ) : null}
+
+      <details className="mt-2">
+        <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300">
+          Faltas{faltas.length > 0 ? ` (${faltas.length})` : ""}
+        </summary>
+        <div className="mt-3 space-y-2">
+          {faltas.length > 0 ? (
+            <ul className="space-y-0.5">
+              {faltas.map((f) => (
+                <li key={f.id} className="text-xs text-zinc-400">
+                  {formatarData(f.date)} ·{" "}
+                  {faculdade.horasAulaEmData(f.date, horarios)} faltas
+                  {f.justified ? " · justificada" : ""}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <form action={registrarFaltaAction} className="flex flex-wrap gap-2">
+            <input type="hidden" name="course_id" value={cadeira.id} />
+            <input name="date" type="date" required className={inputClass} />
+            <label className="flex items-center gap-2 text-xs text-zinc-400">
+              <input name="justified" type="checkbox" />
+              Justificada
+            </label>
+            <button type="submit" className={buttonClass}>
+              Registrar falta
+            </button>
+          </form>
+        </div>
+      </details>
 
       <details className="mt-2">
         <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300">
@@ -191,24 +237,10 @@ function Cadeira({
   );
 }
 
-/**
- * Com horário cadastrado e encontros de mesma duração, o limite vira o
- * que o aluno realmente conta: número de aulas. Sem isso, horas-aula.
- */
-function descreverLimiteFaltas(
-  cargaHoraria: number,
-  horarios: readonly faculdade.ClassSlot[],
-): string {
-  const duracao = faculdade.duracaoUniformeEmMinutos(horarios);
-  const emAulas =
-    duracao === null
-      ? null
-      : faculdade.limiteFaltasEmEncontros(cargaHoraria, duracao);
-
-  if (emAulas !== null) {
-    return `${emAulas} ${emAulas === 1 ? "aula" : "aulas"}`;
-  }
-  return `${faculdade.limiteFaltasEmHoras(cargaHoraria)} horas-aula`;
+function corDoSaldo(restantes: number, limite: number): string {
+  if (restantes < 0) return "text-red-400";
+  if (restantes <= limite / 4) return "text-amber-400";
+  return "text-zinc-400";
 }
 
 function FormSemestre() {

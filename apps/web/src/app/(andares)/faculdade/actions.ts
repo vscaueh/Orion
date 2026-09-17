@@ -56,3 +56,13 @@ export async function criarHorarioAction(formData: FormData): Promise<void> {
   });
   revalidatePath("/faculdade");
 }
+
+export async function registrarFaltaAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  await runAction(faculdade.registrarFalta, ctx, {
+    course_id: texto(formData, "course_id"),
+    date: texto(formData, "date"),
+    justified: formData.get("justified") === "on",
+  });
+  revalidatePath("/faculdade");
+}
