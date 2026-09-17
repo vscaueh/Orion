@@ -10,6 +10,10 @@ de fases (esse está no CLAUDE.md) — é o caderno de rascunho.
 
 ## A fazer
 
+- [ ] **Faixa do dia nas janelas livres.** Hoje é fixa em 7h–23h
+      (`DIA_COMECA`/`DIA_TERMINA` em `rotina/janelas.ts`). Deveria vir da
+      tabela `settings`, junto com o fuso.
+
 - [ ] **Desarquivar pela interface.** Hoje, arquivar é irreversível sem
       mexer no Table Editor do Supabase. O andar Arquivo (Fase 6) deve
       resolver, mas um "desfazer" logo após arquivar seria útil antes.
