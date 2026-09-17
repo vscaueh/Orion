@@ -1,3 +1,5 @@
+import { horasAulaPorEncontro } from "./schedule";
+
 // Regras de avaliação da UNIFOR (3 etapas: AV1, AV2, AV3).
 //
 // 1. Para fazer a AV3: média(AV1, AV2) >= MEDIA_MINIMA_PARA_AV3
@@ -66,4 +68,21 @@ export function limiteFaltasEmHoras(cargaHoraria: number): number {
 /** Quantas faltas ainda cabem. Negativo = limite estourado. */
 export function faltasRestantes(limite: number, faltasDadas: number): number {
   return limite - faltasDadas;
+}
+
+/**
+ * Traduz horas-aula em dias de aula — a interface fala em dias, que é
+ * o que se planeja ("posso faltar quarta?"); a conta por dentro
+ * continua em horas-aula, que é como a UNIFOR registra.
+ *
+ * Null quando não há horário para servir de referência. Negativo
+ * significa dias além do limite.
+ */
+export function horasAulaEmDias(
+  horasAula: number,
+  minutosPorEncontro: number,
+): number | null {
+  const porEncontro = horasAulaPorEncontro(minutosPorEncontro);
+  if (porEncontro <= 0) return null;
+  return Math.floor(horasAula / porEncontro);
 }

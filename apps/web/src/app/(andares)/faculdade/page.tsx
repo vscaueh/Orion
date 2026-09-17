@@ -130,18 +130,21 @@ function Cadeira({
   horarios: faculdade.ClassSlot[];
   faltas: faculdade.Absence[];
 }) {
-  // O peso de cada falta sai do horário da cadeira naquele dia, então o
-  // número acompanha a grade atual — é a mesma contagem do portal da
-  // UNIFOR, que registra uma falta por hora-aula.
+  // A conta roda em horas-aula, como a UNIFOR registra: faltar num
+  // bloco de 100 min custa 2. A tela traduz para dias, que é o que se
+  // planeja — "posso faltar quarta?".
   const horasFaltadas = faltas.reduce(
     (total, f) => total + faculdade.horasAulaEmData(f.date, horarios),
     0,
   );
-  const limite = cadeira.total_hours
+  const limiteHoras = cadeira.total_hours
     ? faculdade.limiteFaltasEmHoras(cadeira.total_hours)
     : null;
-  const restantes =
-    limite === null ? null : faculdade.faltasRestantes(limite, horasFaltadas);
+  const tipica = faculdade.duracaoTipicaEmMinutos(horarios);
+  const saldo =
+    limiteHoras === null
+      ? null
+      : traduzirSaldo(limiteHoras, horasFaltadas, faltas.length, tipica);
   return (
     <li className="rounded-md border border-zinc-800 px-4 py-3">
       <div className="flex items-baseline gap-3">
@@ -156,11 +159,12 @@ function Cadeira({
         ) : null}
       </div>
 
-      {limite !== null ? (
+      {saldo ? (
         <p className="mt-1 text-xs text-zinc-500">
-          {cadeira.total_hours}h · limite de {limite} faltas (25%) ·{" "}
-          <span className={corDoSaldo(restantes!, limite)}>
-            {horasFaltadas} usadas, {restantes} restantes
+          {cadeira.total_hours}h · pode faltar {saldo.limite} (25%) ·{" "}
+          <span className={corDoSaldo(saldo.restantes, saldo.total)}>
+            {saldo.usadas} {saldo.usadas === 1 ? "usada" : "usadas"},{" "}
+            {saldo.restantes} {saldo.restantes === 1 ? "restante" : "restantes"}
           </span>
         </p>
       ) : null}
@@ -187,8 +191,7 @@ function Cadeira({
             <ul className="space-y-0.5">
               {faltas.map((f) => (
                 <li key={f.id} className="text-xs text-zinc-400">
-                  {formatarData(f.date)} ·{" "}
-                  {faculdade.horasAulaEmData(f.date, horarios)} faltas
+                  {formatarData(f.date)}
                   {f.justified ? " · justificada" : ""}
                 </li>
               ))}
@@ -235,6 +238,42 @@ function Cadeira({
       </details>
     </li>
   );
+}
+
+/**
+ * Com horário cadastrado, o saldo é dito em dias de aula. Sem horário
+ * não há como saber quanto vale um dia, e a tela cai para horas-aula.
+ */
+function traduzirSaldo(
+  limiteHoras: number,
+  horasFaltadas: number,
+  diasFaltados: number,
+  minutosTipicos: number | null,
+): { limite: string; usadas: number; restantes: number; total: number } | null {
+  const restantesHoras = faculdade.faltasRestantes(limiteHoras, horasFaltadas);
+
+  if (minutosTipicos !== null) {
+    const limiteDias = faculdade.horasAulaEmDias(limiteHoras, minutosTipicos);
+    const restantesDias = faculdade.horasAulaEmDias(
+      restantesHoras,
+      minutosTipicos,
+    );
+    if (limiteDias !== null && restantesDias !== null) {
+      return {
+        limite: `${limiteDias} ${limiteDias === 1 ? "dia de aula" : "dias de aula"}`,
+        usadas: diasFaltados,
+        restantes: restantesDias,
+        total: limiteDias,
+      };
+    }
+  }
+
+  return {
+    limite: `${limiteHoras} horas-aula`,
+    usadas: horasFaltadas,
+    restantes: restantesHoras,
+    total: limiteHoras,
+  };
 }
 
 function corDoSaldo(restantes: number, limite: number): string {

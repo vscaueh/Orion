@@ -42,16 +42,27 @@ export function duracaoEmMinutos(inicio: string, fim: string): number {
 }
 
 /**
- * Duração dos encontros quando todos têm o mesmo tamanho; null quando
- * variam (aí "uma falta" não tem valor único) ou quando não há aula.
+ * Duração de referência dos encontros da cadeira: a mais frequente.
+ * Serve para falar em dias de aula quando a conta interna é em
+ * horas-aula. Null quando a cadeira não tem horário cadastrado.
  */
-export function duracaoUniformeEmMinutos(
+export function duracaoTipicaEmMinutos(
   encontros: readonly { starts_at: string; ends_at: string }[],
 ): number | null {
-  if (encontros.length === 0) return null;
-  const duracoes = encontros.map((e) => duracaoEmMinutos(e.starts_at, e.ends_at));
-  const primeira = duracoes[0]!;
-  return duracoes.every((d) => d === primeira) ? primeira : null;
+  const vezes = new Map<number, number>();
+  for (const e of encontros) {
+    const d = duracaoEmMinutos(e.starts_at, e.ends_at);
+    vezes.set(d, (vezes.get(d) ?? 0) + 1);
+  }
+  let tipica: number | null = null;
+  let maior = 0;
+  for (const [duracao, n] of vezes) {
+    if (n > maior) {
+      maior = n;
+      tipica = duracao;
+    }
+  }
+  return tipica;
 }
 
 /** Quantas horas-aula vale um encontro de N minutos. */

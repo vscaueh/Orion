@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   diaDaSemana,
   duracaoEmMinutos,
-  duracaoUniformeEmMinutos,
+  duracaoTipicaEmMinutos,
   formatarHora,
   horaParaMinutos,
   horasAulaEmData,
@@ -28,27 +28,28 @@ describe("duracaoEmMinutos", () => {
   });
 });
 
-describe("duracaoUniformeEmMinutos", () => {
+describe("duracaoTipicaEmMinutos", () => {
   it("encontros do mesmo tamanho", () => {
     expect(
-      duracaoUniformeEmMinutos([
+      duracaoTipicaEmMinutos([
         { starts_at: "14:00:00", ends_at: "15:40:00" },
         { starts_at: "08:00:00", ends_at: "09:40:00" },
       ]),
     ).toBe(100);
   });
 
-  it("encontros de tamanhos diferentes: null", () => {
+  it("formatos mistos: vale a duração mais frequente", () => {
     expect(
-      duracaoUniformeEmMinutos([
+      duracaoTipicaEmMinutos([
         { starts_at: "14:00:00", ends_at: "15:40:00" },
-        { starts_at: "08:00:00", ends_at: "08:50:00" },
+        { starts_at: "08:00:00", ends_at: "09:40:00" },
+        { starts_at: "10:00:00", ends_at: "10:50:00" },
       ]),
-    ).toBeNull();
+    ).toBe(100);
   });
 
   it("sem aula cadastrada: null", () => {
-    expect(duracaoUniformeEmMinutos([])).toBeNull();
+    expect(duracaoTipicaEmMinutos([])).toBeNull();
   });
 });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   aprovado,
   faltasRestantes,
+  horasAulaEmDias,
   limiteFaltasEmHoras,
   notaNecessariaAv2,
   notaNecessariaAv3,
@@ -97,5 +98,23 @@ describe("faltasRestantes", () => {
 
   it("limite estourado fica negativo", () => {
     expect(faltasRestantes(8, 10)).toBe(-2);
+  });
+});
+
+describe("horasAulaEmDias", () => {
+  it("POO: 18 horas-aula de limite viram 9 dias", () => {
+    expect(horasAulaEmDias(18, 100)).toBe(9);
+  });
+
+  it("cadeira de aula única por dia: 1 hora-aula = 1 dia", () => {
+    expect(horasAulaEmDias(9, 50)).toBe(9);
+  });
+
+  it("limite estourado vira dias negativos", () => {
+    expect(horasAulaEmDias(-3, 100)).toBe(-2);
+  });
+
+  it("encontro curto demais para uma hora-aula: null", () => {
+    expect(horasAulaEmDias(18, 10)).toBeNull();
   });
 });
