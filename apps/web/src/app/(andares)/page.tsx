@@ -1,5 +1,7 @@
 import { faculdade, hoje, rotina } from "@orion/core";
+import { pendentes } from "@orion/orion";
 import { marcarHabitoAction } from "@/app/(andares)/rotina/actions";
+import { Propostas } from "@/components/propostas";
 import { saudacao } from "@/lib/saudacao";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +15,11 @@ export default async function HojePage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const resumo = await hoje.resumoDoDia({ supabase, userId: user.id });
+  const ctx = { supabase, userId: user.id };
+  const [resumo, propostas] = await Promise.all([
+    hoje.resumoDoDia(ctx),
+    pendentes(ctx),
+  ]);
   const vazio =
     !resumo.proximaAula &&
     resumo.provas.length === 0 &&
@@ -29,6 +35,8 @@ export default async function HojePage() {
           {diaPorExtenso(resumo.agora)}
         </p>
       </header>
+
+      {propostas.length > 0 ? <Propostas propostas={propostas} /> : null}
 
       {vazio ? (
         <p className="text-sm text-zinc-500">

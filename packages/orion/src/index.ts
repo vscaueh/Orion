@@ -4,3 +4,8 @@ export * from "./tools";
 export * from "./loop";
 export { GeminiProvider } from "./providers/gemini";
 export { schemaDaEntrada, toolSpec } from "./schema-json";
+export * from "./memoria";
+export * from "./conversas";
+export * from "./propostas";
+export * from "./resumo-texto";
+export * from "./orion";
