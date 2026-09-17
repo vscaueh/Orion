@@ -97,3 +97,31 @@ export async function arquivarFaltaAction(formData: FormData): Promise<void> {
   await runAction(faculdade.arquivarFalta, ctx, { id: texto(formData, "id") });
   revalidatePath("/faculdade");
 }
+
+/** Aceita nota com vírgula (7,5) além de ponto. */
+function nota(formData: FormData, campo: string): number | null {
+  const bruto = texto(formData, campo).replace(",", ".");
+  return bruto === "" ? null : Number(bruto);
+}
+
+export async function salvarNotasAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  const course_id = texto(formData, "course_id");
+
+  for (const etapa of faculdade.ETAPAS) {
+    const data = texto(formData, `${etapa}_date`) || null;
+    const grade = nota(formData, `${etapa}_grade`);
+    // Só toca nas etapas que já existem ou que receberam algo agora —
+    // salvar as três sempre criaria linhas vazias para AV2 e AV3.
+    const existe = formData.get(`${etapa}_existe`) === "1";
+    if (!existe && data === null && grade === null) continue;
+
+    await runAction(faculdade.salvarAvaliacao, ctx, {
+      course_id,
+      type: etapa,
+      date: data,
+      grade,
+    });
+  }
+  revalidatePath("/faculdade");
+}

@@ -9,6 +9,7 @@ import {
   criarSemestreAction,
   editarCadeiraAction,
   registrarFaltaAction,
+  salvarNotasAction,
 } from "./actions";
 
 const inputClass =
@@ -28,9 +29,10 @@ export default async function FaculdadePage() {
   const ativo = semestres.find((s) => s.active) ?? null;
   const cadeiras = ativo ? await faculdade.listarCadeiras(ctx, ativo.id) : [];
   const idsCadeiras = cadeiras.map((c) => c.id);
-  const [horarios, faltas] = await Promise.all([
+  const [horarios, faltas, avaliacoes] = await Promise.all([
     faculdade.listarHorarios(ctx, idsCadeiras),
     faculdade.listarFaltas(ctx, idsCadeiras),
+    faculdade.listarAvaliacoes(ctx, idsCadeiras),
   ]);
 
   return (
@@ -71,6 +73,9 @@ export default async function FaculdadePage() {
                     cadeira={cadeira}
                     horarios={horarios.filter((h) => h.course_id === cadeira.id)}
                     faltas={faltas.filter((f) => f.course_id === cadeira.id)}
+                    avaliacoes={avaliacoes.filter(
+                      (a) => a.course_id === cadeira.id,
+                    )}
                   />
                 ))}
               </ul>
@@ -129,11 +134,20 @@ function Cadeira({
   cadeira,
   horarios,
   faltas,
+  avaliacoes,
 }: {
   cadeira: faculdade.Course;
   horarios: faculdade.ClassSlot[];
   faltas: faculdade.Absence[];
+  avaliacoes: faculdade.Assessment[];
 }) {
+  const porEtapa = (etapa: faculdade.Etapa) =>
+    avaliacoes.find((a) => a.type === etapa) ?? null;
+  const situacao = faculdade.situacao(
+    porEtapa("AV1")?.grade ?? null,
+    porEtapa("AV2")?.grade ?? null,
+    porEtapa("AV3")?.grade ?? null,
+  );
   // A conta roda em horas-aula, como a UNIFOR registra: faltar num
   // bloco de 100 min custa 2. A tela traduz para dias, que é o que se
   // planeja — "posso faltar quarta?".
@@ -173,6 +187,8 @@ function Cadeira({
         </p>
       ) : null}
 
+      <Situacao situacao={situacao} />
+
       {horarios.length > 0 ? (
         <ul className="mt-2 space-y-0.5">
           {horarios.map((h) => (
@@ -195,6 +211,44 @@ function Cadeira({
           ))}
         </ul>
       ) : null}
+
+      <details className="mt-2">
+        <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300">
+          Notas
+        </summary>
+        <form action={salvarNotasAction} className="mt-3 space-y-2">
+          <input type="hidden" name="course_id" value={cadeira.id} />
+          {faculdade.ETAPAS.map((etapa) => {
+            const avaliacao = porEtapa(etapa);
+            return (
+              <div key={etapa} className="flex flex-wrap items-center gap-2">
+                <span className="w-10 text-xs text-zinc-400">{etapa}</span>
+                <input
+                  type="hidden"
+                  name={`${etapa}_existe`}
+                  value={avaliacao ? "1" : "0"}
+                />
+                <input
+                  name={`${etapa}_date`}
+                  type="date"
+                  defaultValue={avaliacao?.date ?? ""}
+                  className={inputClass}
+                />
+                <input
+                  name={`${etapa}_grade`}
+                  inputMode="decimal"
+                  defaultValue={avaliacao?.grade ?? ""}
+                  placeholder="Nota"
+                  className={`${inputClass} w-20`}
+                />
+              </div>
+            );
+          })}
+          <button type="submit" className={buttonClass}>
+            Salvar notas
+          </button>
+        </form>
+      </details>
 
       <details className="mt-2">
         <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300">
@@ -355,6 +409,52 @@ function traduzirSaldo(
     restantes: restantesHoras,
     total: limiteHoras,
   };
+}
+
+/** Traduz a situação vinda do core para uma frase na tela. */
+function Situacao({ situacao }: { situacao: faculdade.Situacao }) {
+  const nota = (n: number) => n.toFixed(1).replace(".", ",");
+
+  switch (situacao.estado) {
+    case "sem_notas":
+      return null;
+    case "falta_parcial":
+      return (
+        <Linha cor="text-zinc-400">
+          Precisa de {nota(situacao.precisa)} na {situacao.etapa} para chegar
+          à AV3
+        </Linha>
+      );
+    case "reprovado_parciais":
+      return (
+        <Linha cor="text-red-400">
+          Média das parciais {nota(situacao.media)} — abaixo de 4, sem AV3
+        </Linha>
+      );
+    case "aguardando_av3":
+      return (
+        <Linha cor="text-amber-400">
+          Precisa de {nota(situacao.precisa)} na AV3 para passar
+        </Linha>
+      );
+    case "aprovado":
+      return (
+        <Linha cor="text-emerald-400">
+          Aprovado com média {nota(situacao.media)}
+        </Linha>
+      );
+    case "reprovado":
+      return (
+        <Linha cor="text-red-400">
+          Reprovado com média {nota(situacao.media)}
+          {situacao.motivo === "av3" ? " — AV3 abaixo de 4" : ""}
+        </Linha>
+      );
+  }
+}
+
+function Linha({ cor, children }: { cor: string; children: React.ReactNode }) {
+  return <p className={`mt-1 text-xs ${cor}`}>{children}</p>;
 }
 
 function BotaoRemover({

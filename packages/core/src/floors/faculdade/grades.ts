@@ -86,3 +86,52 @@ export function horasAulaEmDias(
   if (porEncontro <= 0) return null;
   return Math.floor(horasAula / porEncontro);
 }
+
+export type Etapa = "AV1" | "AV2" | "AV3";
+
+/**
+ * Onde a cadeira está, em uma frase que a interface só precisa
+ * traduzir. Concentra aqui a leitura das regras para que a tela não
+ * precise saber em que ordem checar o quê.
+ */
+export type Situacao =
+  | { estado: "sem_notas" }
+  | { estado: "falta_parcial"; etapa: Etapa; precisa: number }
+  | { estado: "reprovado_parciais"; media: number }
+  | { estado: "aguardando_av3"; precisa: number }
+  | { estado: "aprovado"; media: number }
+  | { estado: "reprovado"; media: number; motivo: "av3" | "media" };
+
+export function situacao(
+  av1: number | null,
+  av2: number | null,
+  av3: number | null,
+): Situacao {
+  if (av1 === null && av2 === null) return { estado: "sem_notas" };
+
+  // Só uma parcial saiu: a conta é simétrica, então serve para as duas.
+  if (av1 === null || av2 === null) {
+    const saiu = av1 ?? av2!;
+    return {
+      estado: "falta_parcial",
+      etapa: av1 === null ? "AV1" : "AV2",
+      precisa: notaNecessariaAv2(saiu),
+    };
+  }
+
+  if (!podeFazerAv3(av1, av2)) {
+    return { estado: "reprovado_parciais", media: mediaParciais(av1, av2) };
+  }
+
+  if (av3 === null) {
+    return { estado: "aguardando_av3", precisa: notaNecessariaAv3(av1, av2)! };
+  }
+
+  const media = mediaFinal(av1, av2, av3);
+  if (aprovado(av1, av2, av3)) return { estado: "aprovado", media };
+  return {
+    estado: "reprovado",
+    media,
+    motivo: av3 < NOTA_MINIMA_AV3 ? "av3" : "media",
+  };
+}

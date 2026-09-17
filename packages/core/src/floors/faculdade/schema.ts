@@ -89,3 +89,22 @@ export const courseUpdateSchema = z.object({
 export type CourseUpdate = z.input<typeof courseUpdateSchema>;
 
 export const idSchema = z.object({ id: z.uuid() });
+
+export const ETAPAS = ["AV1", "AV2", "AV3"] as const;
+
+export const assessmentInputSchema = z.object({
+  course_id: z.uuid(),
+  type: z.enum(ETAPAS),
+  date: z.iso.date().nullish(),
+  grade: z.number().min(0).max(10).nullish(),
+});
+export type AssessmentInput = z.input<typeof assessmentInputSchema>;
+
+export interface Assessment extends BaseRow {
+  course_id: string;
+  title: string;
+  type: string | null;
+  date: string | null;
+  weight: number | null;
+  grade: number | null;
+}

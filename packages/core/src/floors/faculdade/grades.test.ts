@@ -7,6 +7,7 @@ import {
   notaNecessariaAv2,
   notaNecessariaAv3,
   podeFazerAv3,
+  situacao,
 } from "./grades";
 
 describe("podeFazerAv3", () => {
@@ -116,5 +117,59 @@ describe("horasAulaEmDias", () => {
 
   it("encontro curto demais para uma hora-aula: null", () => {
     expect(horasAulaEmDias(18, 10)).toBeNull();
+  });
+});
+
+describe("situacao", () => {
+  it("sem nenhuma nota não diz nada", () => {
+    expect(situacao(null, null, null)).toEqual({ estado: "sem_notas" });
+  });
+
+  it("com a AV1 só, diz quanto precisa na AV2", () => {
+    expect(situacao(3, null, null)).toEqual({
+      estado: "falta_parcial",
+      etapa: "AV2",
+      precisa: 5,
+    });
+  });
+
+  it("com a AV2 só, diz quanto precisa na AV1", () => {
+    expect(situacao(null, 3, null)).toEqual({
+      estado: "falta_parcial",
+      etapa: "AV1",
+      precisa: 5,
+    });
+  });
+
+  it("parciais fracas reprovam antes da AV3", () => {
+    expect(situacao(3, 4, null)).toEqual({
+      estado: "reprovado_parciais",
+      media: 3.5,
+    });
+  });
+
+  it("com as parciais boas, diz quanto precisa na AV3", () => {
+    expect(situacao(5, 5, null)).toEqual({ estado: "aguardando_av3", precisa: 5 });
+    expect(situacao(4, 4, null)).toEqual({ estado: "aguardando_av3", precisa: 7 });
+  });
+
+  it("aprovado traz a média final", () => {
+    expect(situacao(6, 6, 6)).toEqual({ estado: "aprovado", media: 6 });
+  });
+
+  it("AV3 abaixo de 4 reprova mesmo com média alta", () => {
+    expect(situacao(10, 10, 3)).toEqual({
+      estado: "reprovado",
+      media: 23 / 3,
+      motivo: "av3",
+    });
+  });
+
+  it("AV3 boa mas média final baixa reprova pela média", () => {
+    expect(situacao(4, 4, 6)).toEqual({
+      estado: "reprovado",
+      media: 14 / 3,
+      motivo: "media",
+    });
   });
 });

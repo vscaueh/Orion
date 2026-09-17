@@ -1,12 +1,14 @@
 import { defineAction, type ActionContext } from "../../action";
 import {
   absenceInputSchema,
+  assessmentInputSchema,
   classSlotInputSchema,
   courseInputSchema,
   courseUpdateSchema,
   idSchema,
   semesterInputSchema,
   type Absence,
+  type Assessment,
   type ClassSlot,
   type Course,
   type Semester,
@@ -199,5 +201,38 @@ export const arquivarFalta = defineAction({
   requiresApproval: true,
   async execute(ctx, { id }) {
     await arquivar(ctx, "absences", "id", id);
+  },
+});
+
+export const salvarAvaliacao = defineAction({
+  name: "faculdade.salvar_avaliacao",
+  description:
+    "Lança ou atualiza a data e a nota de uma etapa (AV1, AV2 ou AV3) de uma cadeira. Nota vazia significa que ainda não saiu.",
+  input: assessmentInputSchema,
+  mutation: true,
+  requiresApproval: true,
+  async execute({ supabase, userId }, { course_id, type, ...campos }) {
+    // Uma etapa por cadeira: se já existe, atualiza em vez de duplicar.
+    const { data: existente, error: erroBusca } = await supabase
+      .from("assessments")
+      .select("id")
+      .eq("course_id", course_id)
+      .eq("type", type)
+      .eq("user_id", userId)
+      .is("archived_at", null)
+      .maybeSingle<{ id: string }>();
+    if (erroBusca) {
+      throw new Error(`Erro ao buscar avaliação: ${erroBusca.message}`);
+    }
+
+    const query = existente
+      ? supabase.from("assessments").update(campos).eq("id", existente.id)
+      : supabase
+          .from("assessments")
+          .insert({ ...campos, course_id, type, title: type, user_id: userId });
+
+    const { data, error } = await query.select().single<Assessment>();
+    if (error) throw new Error(`Erro ao salvar avaliação: ${error.message}`);
+    return data;
   },
 });
