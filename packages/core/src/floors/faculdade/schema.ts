@@ -77,3 +77,15 @@ export interface Absence extends BaseRow {
   date: string;
   justified: boolean;
 }
+
+/** Edição de cadeira: o id identifica, o resto é opcional. */
+export const courseUpdateSchema = z.object({
+  id: z.uuid(),
+  name: z.string().min(1, "A cadeira precisa de um nome"),
+  code: z.string().nullish(),
+  professor: z.string().nullish(),
+  total_hours: z.number().int().positive().nullish(),
+});
+export type CourseUpdate = z.input<typeof courseUpdateSchema>;
+
+export const idSchema = z.object({ id: z.uuid() });

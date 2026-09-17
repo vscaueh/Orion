@@ -1,8 +1,10 @@
-import { defineAction } from "../../action";
+import { defineAction, type ActionContext } from "../../action";
 import {
   absenceInputSchema,
   classSlotInputSchema,
   courseInputSchema,
+  courseUpdateSchema,
+  idSchema,
   semesterInputSchema,
   type Absence,
   type ClassSlot,
@@ -106,5 +108,96 @@ export const registrarFalta = defineAction({
       .single<Absence>();
     if (error) throw new Error(`Erro ao registrar falta: ${error.message}`);
     return data;
+  },
+});
+
+export const editarCadeira = defineAction({
+  name: "faculdade.editar_cadeira",
+  description:
+    "Altera os dados de uma cadeira: nome, código, professor e carga horária.",
+  input: courseUpdateSchema,
+  mutation: true,
+  requiresApproval: true,
+  async execute({ supabase, userId }, { id, ...campos }) {
+    const { data, error } = await supabase
+      .from("courses")
+      .update(campos)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select()
+      .single<Course>();
+    if (error) throw new Error(`Erro ao editar cadeira: ${error.message}`);
+    return data;
+  },
+});
+
+// Arquivar em vez de apagar: o dado sai das telas (toda query filtra
+// archived_at null) mas continua no banco, alimentando o andar Arquivo.
+async function arquivar(
+  { supabase, userId }: ActionContext,
+  tabela: string,
+  coluna: string,
+  valor: string | readonly string[],
+): Promise<void> {
+  const query = supabase
+    .from(tabela)
+    .update({ archived_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .is("archived_at", null);
+
+  const { error } = Array.isArray(valor)
+    ? await query.in(coluna, valor as string[])
+    : await query.eq(coluna, valor as string);
+  if (error) throw new Error(`Erro ao arquivar em ${tabela}: ${error.message}`);
+}
+
+export const arquivarCadeira = defineAction({
+  name: "faculdade.arquivar_cadeira",
+  description:
+    "Arquiva uma cadeira e o que depende dela (horários e blocos da semana). Nada é apagado — some das telas e vai para o Arquivo.",
+  input: idSchema,
+  mutation: true,
+  requiresApproval: true,
+  async execute(ctx, { id }) {
+    // Os horários precisam ir junto, senão a semana-tipo do andar
+    // Rotina continuaria mostrando aulas de uma cadeira que saiu.
+    const { data: slots, error } = await ctx.supabase
+      .from("class_slots")
+      .select("id")
+      .eq("course_id", id)
+      .eq("user_id", ctx.userId)
+      .returns<{ id: string }[]>();
+    if (error) throw new Error(`Erro ao ler horários: ${error.message}`);
+
+    const idsSlots = slots.map((s) => s.id);
+    if (idsSlots.length > 0) {
+      await arquivar(ctx, "time_blocks", "class_slot_id", idsSlots);
+      await arquivar(ctx, "class_slots", "id", idsSlots);
+    }
+    await arquivar(ctx, "courses", "id", id);
+  },
+});
+
+export const arquivarHorario = defineAction({
+  name: "faculdade.arquivar_horario",
+  description:
+    "Remove um horário de aula da cadeira, junto com o bloco que ele gerou na semana-tipo.",
+  input: idSchema,
+  mutation: true,
+  requiresApproval: true,
+  async execute(ctx, { id }) {
+    await arquivar(ctx, "time_blocks", "class_slot_id", id);
+    await arquivar(ctx, "class_slots", "id", id);
+  },
+});
+
+export const arquivarFalta = defineAction({
+  name: "faculdade.arquivar_falta",
+  description: "Remove uma falta registrada por engano.",
+  input: idSchema,
+  mutation: true,
+  requiresApproval: true,
+  async execute(ctx, { id }) {
+    await arquivar(ctx, "absences", "id", id);
   },
 });

@@ -66,3 +66,34 @@ export async function registrarFaltaAction(formData: FormData): Promise<void> {
   });
   revalidatePath("/faculdade");
 }
+
+export async function editarCadeiraAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  const carga = texto(formData, "total_hours");
+  await runAction(faculdade.editarCadeira, ctx, {
+    id: texto(formData, "id"),
+    name: texto(formData, "name"),
+    code: texto(formData, "code") || null,
+    professor: texto(formData, "professor") || null,
+    total_hours: carga ? Number(carga) : null,
+  });
+  revalidatePath("/faculdade");
+}
+
+export async function arquivarCadeiraAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  await runAction(faculdade.arquivarCadeira, ctx, { id: texto(formData, "id") });
+  revalidatePath("/faculdade");
+}
+
+export async function arquivarHorarioAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  await runAction(faculdade.arquivarHorario, ctx, { id: texto(formData, "id") });
+  revalidatePath("/faculdade");
+}
+
+export async function arquivarFaltaAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  await runAction(faculdade.arquivarFalta, ctx, { id: texto(formData, "id") });
+  revalidatePath("/faculdade");
+}

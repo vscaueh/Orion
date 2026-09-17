@@ -1,9 +1,13 @@
 import { faculdade } from "@orion/core";
 import { createClient } from "@/lib/supabase/server";
 import {
+  arquivarCadeiraAction,
+  arquivarFaltaAction,
+  arquivarHorarioAction,
   criarCadeiraAction,
   criarHorarioAction,
   criarSemestreAction,
+  editarCadeiraAction,
   registrarFaltaAction,
 } from "./actions";
 
@@ -172,11 +176,21 @@ function Cadeira({
       {horarios.length > 0 ? (
         <ul className="mt-2 space-y-0.5">
           {horarios.map((h) => (
-            <li key={h.id} className="text-xs text-zinc-400">
-              {faculdade.DIAS_SEMANA_CURTO[h.weekday]}{" "}
-              {faculdade.formatarHora(h.starts_at)}–
-              {faculdade.formatarHora(h.ends_at)}
-              {h.location ? ` · ${h.location}` : ""}
+            <li
+              key={h.id}
+              className="flex items-center gap-2 text-xs text-zinc-400"
+            >
+              <span>
+                {faculdade.DIAS_SEMANA_CURTO[h.weekday]}{" "}
+                {faculdade.formatarHora(h.starts_at)}–
+                {faculdade.formatarHora(h.ends_at)}
+                {h.location ? ` · ${h.location}` : ""}
+              </span>
+              <BotaoRemover
+                action={arquivarHorarioAction}
+                id={h.id}
+                titulo="Remover horário"
+              />
             </li>
           ))}
         </ul>
@@ -190,9 +204,19 @@ function Cadeira({
           {faltas.length > 0 ? (
             <ul className="space-y-0.5">
               {faltas.map((f) => (
-                <li key={f.id} className="text-xs text-zinc-400">
-                  {formatarData(f.date)}
-                  {f.justified ? " · justificada" : ""}
+                <li
+                  key={f.id}
+                  className="flex items-center gap-2 text-xs text-zinc-400"
+                >
+                  <span>
+                    {formatarData(f.date)}
+                    {f.justified ? " · justificada" : ""}
+                  </span>
+                  <BotaoRemover
+                    action={arquivarFaltaAction}
+                    id={f.id}
+                    titulo="Remover falta"
+                  />
                 </li>
               ))}
             </ul>
@@ -236,6 +260,63 @@ function Cadeira({
           </button>
         </form>
       </details>
+
+      <details className="mt-2">
+        <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300">
+          Editar cadeira
+        </summary>
+        <form action={editarCadeiraAction} className="mt-3 space-y-3">
+          <input type="hidden" name="id" value={cadeira.id} />
+          <div className="flex flex-wrap gap-3">
+            <input
+              name="name"
+              required
+              defaultValue={cadeira.name}
+              placeholder="Nome da cadeira"
+              className={`${inputClass} min-w-48 flex-1`}
+            />
+            <input
+              name="code"
+              defaultValue={cadeira.code ?? ""}
+              placeholder="Código"
+              className={`${inputClass} w-36`}
+            />
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <input
+              name="professor"
+              defaultValue={cadeira.professor ?? ""}
+              placeholder="Professor(a)"
+              className={`${inputClass} min-w-48 flex-1`}
+            />
+            <input
+              name="total_hours"
+              type="number"
+              min="1"
+              defaultValue={cadeira.total_hours ?? ""}
+              placeholder="Carga horária"
+              className={`${inputClass} w-40`}
+            />
+          </div>
+          <button type="submit" className={buttonClass}>
+            Salvar alterações
+          </button>
+        </form>
+
+        <form action={arquivarCadeiraAction} className="mt-4">
+          <input type="hidden" name="id" value={cadeira.id} />
+          <button
+            type="submit"
+            className="text-xs text-zinc-500 transition-colors hover:text-red-400"
+          >
+            Arquivar cadeira
+          </button>
+          <p className="mt-1 text-xs text-zinc-600">
+            Some das telas junto com os horários e faltas dela. Nada é
+            apagado — vai para o Arquivo.
+          </p>
+        </form>
+      </details>
     </li>
   );
 }
@@ -274,6 +355,29 @@ function traduzirSaldo(
     restantes: restantesHoras,
     total: limiteHoras,
   };
+}
+
+function BotaoRemover({
+  action,
+  id,
+  titulo,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  id: string;
+  titulo: string;
+}) {
+  return (
+    <form action={action} className="inline">
+      <input type="hidden" name="id" value={id} />
+      <button
+        type="submit"
+        title={titulo}
+        className="text-zinc-600 transition-colors hover:text-red-400"
+      >
+        ×
+      </button>
+    </form>
+  );
 }
 
 function corDoSaldo(restantes: number, limite: number): string {
