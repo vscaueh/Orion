@@ -44,3 +44,15 @@ export async function criarCadeiraAction(formData: FormData): Promise<void> {
   });
   revalidatePath("/faculdade");
 }
+
+export async function criarHorarioAction(formData: FormData): Promise<void> {
+  const ctx = await contexto();
+  await runAction(faculdade.criarHorario, ctx, {
+    course_id: texto(formData, "course_id"),
+    weekday: Number(texto(formData, "weekday")),
+    starts_at: texto(formData, "starts_at"),
+    ends_at: texto(formData, "ends_at"),
+    location: texto(formData, "location") || null,
+  });
+  revalidatePath("/faculdade");
+}

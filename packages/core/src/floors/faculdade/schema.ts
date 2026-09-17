@@ -37,3 +37,30 @@ export interface Course extends BaseRow {
   color: string | null;
   total_hours: number | null;
 }
+
+const horaSchema = z
+  .string()
+  .regex(/^\d{2}:\d{2}(:\d{2})?$/, "Hora inválida — use HH:MM");
+
+export const classSlotInputSchema = z
+  .object({
+    course_id: z.uuid(),
+    /** 0 = domingo … 6 = sábado, igual ao getDay() do JavaScript. */
+    weekday: z.number().int().min(0).max(6),
+    starts_at: horaSchema,
+    ends_at: horaSchema,
+    location: z.string().nullish(),
+  })
+  .refine((s) => s.ends_at > s.starts_at, {
+    message: "A aula precisa terminar depois de começar",
+    path: ["ends_at"],
+  });
+export type ClassSlotInput = z.input<typeof classSlotInputSchema>;
+
+export interface ClassSlot extends BaseRow {
+  course_id: string;
+  weekday: number;
+  starts_at: string;
+  ends_at: string;
+  location: string | null;
+}

@@ -1,5 +1,5 @@
 import type { ActionContext } from "../../action";
-import type { Course, Semester } from "./schema";
+import type { ClassSlot, Course, Semester } from "./schema";
 
 // Leituras não são actions (não mutam nada, não precisam de aprovação);
 // são funções simples sobre o mesmo contexto.
@@ -29,5 +29,23 @@ export async function listarCadeiras(
     .order("name")
     .returns<Course[]>();
   if (error) throw new Error(`Erro ao listar cadeiras: ${error.message}`);
+  return data;
+}
+
+/** Horários de várias cadeiras de uma vez, na ordem da semana. */
+export async function listarHorarios(
+  ctx: ActionContext,
+  courseIds: readonly string[],
+): Promise<ClassSlot[]> {
+  if (courseIds.length === 0) return [];
+  const { data, error } = await ctx.supabase
+    .from("class_slots")
+    .select("*")
+    .in("course_id", courseIds)
+    .is("archived_at", null)
+    .order("weekday")
+    .order("starts_at")
+    .returns<ClassSlot[]>();
+  if (error) throw new Error(`Erro ao listar horários: ${error.message}`);
   return data;
 }
