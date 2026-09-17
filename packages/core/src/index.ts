@@ -7,6 +7,7 @@ export { defineAction, runAction } from "./action";
 
 export * as faculdade from "./floors/faculdade";
 export * as hoje from "./floors/hoje";
+export * as projetos from "./floors/projetos";
 export * as rotina from "./floors/rotina";
 export {
   agoraNoFuso,
