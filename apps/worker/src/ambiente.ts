@@ -4,7 +4,13 @@ import type { ActionContext } from "@orion/core";
 
 function obrigatoria(nome: string): string {
   const valor = process.env[nome];
-  if (!valor) throw new Error(`Variável de ambiente ${nome} não definida.`);
+  if (!valor) {
+    throw new Error(
+      `Variável de ambiente ${nome} não definida. ` +
+        `Copie apps/worker/.env.example para apps/worker/.env e preencha ` +
+        `(em produção, configure as variáveis na plataforma).`,
+    );
+  }
   return valor;
 }
 
