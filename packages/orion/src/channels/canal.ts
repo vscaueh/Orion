@@ -14,7 +14,7 @@ export interface OpcoesDeEnvio {
 }
 
 export interface Canal {
-  readonly nome: "web" | "telegram" | "whatsapp";
+  readonly nome: "web" | "telegram" | "whatsapp" | "console";
   send(userId: string, mensagem: string, opcoes?: OpcoesDeEnvio): Promise<void>;
 }
 

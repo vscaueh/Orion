@@ -1,5 +1,6 @@
-import { contextoDoDono, provider } from "./ambiente";
 import { canalDoWorker, iniciarAgendador, rodarAgora } from "./agendador";
+import { contextoDoDono, provider } from "./ambiente";
+import { ConsoleCanal } from "./console-canal";
 import { iniciarBot } from "./telegram";
 
 // O worker é onde a Orion vive fora do site: o agendador das rotinas e
@@ -12,11 +13,19 @@ async function main(): Promise<void> {
   const ctx = contextoDoDono();
   const canal = canalDoWorker();
 
-  const [comando, rotina] = process.argv.slice(2);
+  // O "--" de `pnpm start -- rodar ...` chega aqui como argumento.
+  const argumentos = process.argv.slice(2).filter((a) => a !== "--");
+  const [comando, rotina] = argumentos;
+
   if (comando === "rodar") {
-    if (!canal) throw new Error("Configure TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID.");
     if (!rotina) throw new Error('Diga qual rotina: rodar "montar o dia"');
-    await rodarAgora(rotina, { ctx, provider: provider(), canal });
+    // Sem Telegram configurado, a rotina imprime no terminal — dá para
+    // ver o texto antes de ter bot.
+    await rodarAgora(rotina, {
+      ctx,
+      provider: provider(),
+      canal: canal ?? new ConsoleCanal(),
+    });
     return;
   }
 

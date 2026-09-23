@@ -22,8 +22,10 @@
 ```bash
 cd apps/worker
 cp .env.example .env   # e preencha
-pnpm start -- rodar "montar o dia"
+pnpm start rodar "montar o dia"
 ```
+
+Sem Telegram configurado, a rotina imprime no terminal — dá para ver o texto antes de ter bot.
 
 A mensagem chega no Telegram na hora. Rode duas vezes: a segunda não envia nada, porque `orion_jobs` já registrou a janela — é a idempotência funcionando.
 
