@@ -25,7 +25,11 @@ interface ConteudoGemini {
 
 export interface GeminiOptions {
   apiKey: string;
-  /** Ex.: "gemini-2.5-flash". Configurável para trocar sem mexer no código. */
+  /**
+   * Ex.: "gemini-3.6-flash". O Google aposenta modelos para contas
+   * novas de tempos em tempos, então isto é configurável de fora: a
+   * troca é uma variável de ambiente, não um deploy.
+   */
   model?: string;
   fetchImpl?: typeof fetch;
 }
@@ -35,7 +39,7 @@ export class GeminiProvider implements LLMProvider {
   private readonly model: string;
   private readonly fetchImpl: typeof fetch;
 
-  constructor({ apiKey, model = "gemini-2.5-flash", fetchImpl }: GeminiOptions) {
+  constructor({ apiKey, model = "gemini-3.6-flash", fetchImpl }: GeminiOptions) {
     if (!apiKey) throw new Error("GeminiProvider precisa de uma apiKey.");
     this.apiKey = apiKey;
     this.model = model;

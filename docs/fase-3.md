@@ -11,6 +11,7 @@
 
 ## Conceitos novos
 
+- **Configuração no lugar de constante.** O modelo veio de uma variável de ambiente desde o primeiro commit, e isso já pagou: o Gemini 2.5 Flash foi fechado para contas novas e a troca para o 3.6 foi uma linha no `.env`, sem tocar em código.
 - **Interface antes de implementação.** `LLMProvider` tem um método. Nada fora de `providers/` sabe qual modelo roda — trocar de modelo é escrever um arquivo e mudar uma variável de ambiente. A mesma ideia vale para `Canal`: o código que fala com o usuário não sabe se é site ou Telegram.
 - **Loop de ferramentas.** O modelo não "executa" nada: ele devolve um pedido, o nosso código valida e executa, o resultado volta como mensagem, e o modelo responde de novo. Até oito voltas, senão um pedido mal formulado gira para sempre.
 - **As tools são as actions.** Cada action já declarava nome, descrição em português e schema zod desde a Fase 1. O registro de ferramentas é literalmente uma lista delas — zero reimplementação. Foi a aposta da Fase 1 pagando aqui.
