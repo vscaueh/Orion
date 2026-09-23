@@ -10,6 +10,10 @@ de fases (esse está no CLAUDE.md) — é o caderno de rascunho.
 
 ## A fazer
 
+- [ ] **Streaming da resposta da Orion.** Hoje a resposta chega inteira
+      de uma vez; ver o texto aparecendo palavra a palavra encurta a
+      espera percebida mais do que qualquer otimização de servidor.
+
 - [ ] **Hospedar o worker.** O Codespaces desliga sozinho; sem um lugar
       que fique de pé (Railway, Render, VPS), as rotinas da Fase 4 não
       acontecem.

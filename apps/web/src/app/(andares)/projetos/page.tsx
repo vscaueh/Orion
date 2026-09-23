@@ -1,5 +1,5 @@
 import { agoraNoFuso, projetos, rotina } from "@orion/core";
-import { createClient } from "@/lib/supabase/server";
+import { sessao } from "@/lib/sessao";
 import {
   arquivarProjetoAction,
   arquivarTarefaAction,
@@ -24,13 +24,9 @@ const ROTULO_DO_TIPO: Record<projetos.TipoDeProjeto, string> = {
 };
 
 export default async function ProjetosPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  const ctx = await sessao();
+  if (!ctx) return null; // o middleware não deixa chegar aqui deslogado
 
-  const ctx = { supabase, userId: user.id };
   const agora = agoraNoFuso();
   const [lista, tarefas] = await Promise.all([
     projetos.listarProjetos(ctx),

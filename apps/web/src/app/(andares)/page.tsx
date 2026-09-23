@@ -3,19 +3,15 @@ import { pendentes } from "@orion/orion";
 import { marcarHabitoAction } from "@/app/(andares)/rotina/actions";
 import { Propostas } from "@/components/propostas";
 import { saudacao } from "@/lib/saudacao";
-import { createClient } from "@/lib/supabase/server";
+import { sessao } from "@/lib/sessao";
 
 // O Hoje é recalculado a cada visita: o "agora" muda o tempo todo.
 export const dynamic = "force-dynamic";
 
 export default async function HojePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  const ctx = await sessao();
+  if (!ctx) return null; // o middleware não deixa chegar aqui deslogado
 
-  const ctx = { supabase, userId: user.id };
   const [resumo, propostas] = await Promise.all([
     hoje.resumoDoDia(ctx),
     pendentes(ctx),

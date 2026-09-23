@@ -1,5 +1,5 @@
 import { faculdade } from "@orion/core";
-import { createClient } from "@/lib/supabase/server";
+import { sessao } from "@/lib/sessao";
 import {
   arquivarCadeiraAction,
   arquivarFaltaAction,
@@ -18,13 +18,9 @@ const buttonClass =
   "rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-zinc-100 transition-colors hover:bg-zinc-700";
 
 export default async function FaculdadePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null; // o middleware não deixa chegar aqui deslogado
+  const ctx = await sessao();
+  if (!ctx) return null; // o middleware não deixa chegar aqui deslogado
 
-  const ctx = { supabase, userId: user.id };
   const semestres = await faculdade.listarSemestres(ctx);
   const ativo = semestres.find((s) => s.active) ?? null;
   const cadeiras = ativo ? await faculdade.listarCadeiras(ctx, ativo.id) : [];

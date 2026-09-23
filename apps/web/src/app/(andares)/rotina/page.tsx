@@ -1,5 +1,5 @@
 import { agoraNoFuso, faculdade, rotina } from "@orion/core";
-import { createClient } from "@/lib/supabase/server";
+import { sessao } from "@/lib/sessao";
 import {
   arquivarBlocoAction,
   arquivarHabitoAction,
@@ -17,13 +17,9 @@ const buttonClass =
   "rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-zinc-100 transition-colors hover:bg-zinc-700";
 
 export default async function RotinaPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  const ctx = await sessao();
+  if (!ctx) return null; // o middleware não deixa chegar aqui deslogado
 
-  const ctx = { supabase, userId: user.id };
   const agora = agoraNoFuso();
   const [habitos, registros, blocos] = await Promise.all([
     rotina.listarHabitos(ctx),
