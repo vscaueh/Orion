@@ -23,6 +23,12 @@ interface ConteudoGemini {
   parts: ParteGemini[];
 }
 
+/**
+ * Status que compensa repetir: sobrecarga e limite de cota passam
+ * sozinhos. Um 400 ou 404 não passa — repetir só atrasa o erro.
+ */
+const REPETIVEIS = new Set([429, 500, 502, 503, 504]);
+
 export interface GeminiOptions {
   apiKey: string;
   /**
@@ -32,18 +38,33 @@ export interface GeminiOptions {
    */
   model?: string;
   fetchImpl?: typeof fetch;
+  /** Quantas vezes tentar no total, contando a primeira. */
+  tentativas?: number;
+  /** Injetável para os testes não dormirem de verdade. */
+  esperar?: (ms: number) => Promise<void>;
 }
 
 export class GeminiProvider implements LLMProvider {
   private readonly apiKey: string;
   private readonly model: string;
   private readonly fetchImpl: typeof fetch;
+  private readonly tentativas: number;
+  private readonly esperar: (ms: number) => Promise<void>;
 
-  constructor({ apiKey, model = "gemini-3.6-flash", fetchImpl }: GeminiOptions) {
+  constructor({
+    apiKey,
+    model = "gemini-3.6-flash",
+    fetchImpl,
+    tentativas = 3,
+    esperar,
+  }: GeminiOptions) {
     if (!apiKey) throw new Error("GeminiProvider precisa de uma apiKey.");
     this.apiKey = apiKey;
     this.model = model;
     this.fetchImpl = fetchImpl ?? globalThis.fetch;
+    this.tentativas = Math.max(1, tentativas);
+    this.esperar =
+      esperar ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   }
 
   async complete(input: LLMInput): Promise<LLMResult> {
@@ -65,30 +86,74 @@ export class GeminiProvider implements LLMProvider {
         : {}),
     };
 
-    const resposta = await this.fetchImpl(
-      `${ENDPOINT}/${this.model}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-goog-api-key": this.apiKey,
-        },
-        body: JSON.stringify(corpo),
-      },
-    );
-
-    if (!resposta.ok) {
-      const detalhe = await resposta.text().catch(() => "");
-      throw new Error(
-        `Gemini respondeu ${resposta.status}: ${detalhe.slice(0, 300)}`,
-      );
-    }
+    const resposta = await this.pedirComRetentativa(corpo);
 
     const json = (await resposta.json()) as {
       candidates?: { content?: { parts?: ParteGemini[] } }[];
     };
     return extrairResultado(json.candidates?.[0]?.content?.parts ?? []);
   }
+
+  /**
+   * Sobrecarga do modelo e estouro de cota são a rotina do free tier, e
+   * passam sozinhos em segundos. Insistir aqui evita transformar um
+   * soluço do fornecedor numa conversa perdida.
+   */
+  private async pedirComRetentativa(corpo: unknown): Promise<Response> {
+    for (let tentativa = 1; ; tentativa++) {
+      const resposta = await this.fetchImpl(
+        `${ENDPOINT}/${this.model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-goog-api-key": this.apiKey,
+          },
+          body: JSON.stringify(corpo),
+        },
+      );
+
+      if (resposta.ok) return resposta;
+
+      const ultima = tentativa >= this.tentativas;
+      if (ultima || !REPETIVEIS.has(resposta.status)) {
+        const detalhe = await resposta.text().catch(() => "");
+        throw new Error(mensagemDeErro(resposta.status, detalhe));
+      }
+
+      // O servidor às vezes diz quanto esperar; senão, dobra a cada vez.
+      const pedido = Number(resposta.headers.get("retry-after")) * 1000;
+      await this.esperar(
+        Number.isFinite(pedido) && pedido > 0 ? pedido : 2 ** tentativa * 500,
+      );
+    }
+  }
+}
+
+/** Mensagens que dizem o que fazer, em vez de despejar o JSON do erro. */
+function mensagemDeErro(status: number, detalhe: string): string {
+  if (status === 429) {
+    return (
+      "A cota do modelo estourou. O free tier tem limite por minuto e por " +
+      "dia — espere um pouco e tente de novo."
+    );
+  }
+  if (status >= 500) {
+    return (
+      "O modelo está sobrecarregado e não respondeu, mesmo depois de " +
+      "algumas tentativas. Costuma passar em instantes."
+    );
+  }
+  if (status === 404) {
+    return (
+      `O modelo configurado não existe ou não está disponível para esta ` +
+      `conta. Troque GEMINI_MODEL. Detalhe: ${detalhe.slice(0, 200)}`
+    );
+  }
+  if (status === 401 || status === 403) {
+    return "A chave do modelo foi recusada. Confira GEMINI_API_KEY.";
+  }
+  return `Gemini respondeu ${status}: ${detalhe.slice(0, 300)}`;
 }
 
 /**
