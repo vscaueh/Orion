@@ -10,3 +10,6 @@ export * from "./propostas";
 export * from "./resumo-texto";
 export * from "./orion";
 export * from "./channels";
+export * from "./encaixe";
+export * from "./jobs";
+export * as rotinas from "./rotinas";

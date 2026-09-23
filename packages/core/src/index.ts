@@ -17,3 +17,4 @@ export {
   FUSO_PADRAO,
 } from "./tempo";
 export type { Agora, PeriodoDoDia } from "./tempo";
+export * from "./settings";

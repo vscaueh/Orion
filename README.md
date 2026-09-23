@@ -42,4 +42,5 @@ O login é restrito a um único e-mail (`OWNER_EMAIL`) — o site é pessoal por
 - ✅ **Fase 1 — Faculdade + Hoje**: semestre, cadeiras, horários, notas e faltas; Hoje com próxima aula e provas próximas ([docs/fase-1.md](./docs/fase-1.md))
 - ✅ **Fase 2 — Rotina + Projetos**: hábitos com sequência, semana-tipo com janelas livres, projetos e tarefas; Hoje completo ([docs/fase-2.md](./docs/fase-2.md))
 - ✅ **Fase 3 — Orion falando**: camada própria de IA sobre as actions do core, propostas com aprovação, aba no site e bot no Telegram ([docs/fase-3.md](./docs/fase-3.md))
-- 🔨 **Fase 4 — Orion acordando**: a seguir
+- ✅ **Fase 4 — Orion acordando**: agendador com rotinas idempotentes, encaixe de tarefas nas janelas livres ([docs/fase-4.md](./docs/fase-4.md))
+- 🔨 **Fase 5 — Integrações**: a seguir

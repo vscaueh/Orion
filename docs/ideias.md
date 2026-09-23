@@ -10,6 +10,13 @@ de fases (esse está no CLAUDE.md) — é o caderno de rascunho.
 
 ## A fazer
 
+- [ ] **Hospedar o worker.** O Codespaces desliga sozinho; sem um lugar
+      que fique de pé (Railway, Render, VPS), as rotinas da Fase 4 não
+      acontecem.
+- [ ] **Tela de configurações.** `settings` já é lida pelo código (fuso,
+      faixa do dia, teto de foco, canal), mas só dá para gravar pelo
+      banco.
+
 - [ ] **Faixa do dia nas janelas livres.** Hoje é fixa em 7h–23h
       (`DIA_COMECA`/`DIA_TERMINA` em `rotina/janelas.ts`). Deveria vir da
       tabela `settings`, junto com o fuso.
