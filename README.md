@@ -14,7 +14,9 @@ A metáfora do projeto é um prédio: cada andar é um domínio da vida.
 
 - **Monorepo** — pnpm workspaces
 - **`apps/web`** — Next.js (App Router) + TypeScript + Tailwind
+- **`apps/worker`** — Node; bot do Telegram e, a partir da Fase 4, o agendador
 - **`packages/core`** — modelo de dados, validações e ações dos andares (compartilhado entre site e Orion)
+- **`packages/orion`** — provider de modelo, prompt, memória, tools e canais
 - **Banco/Auth** — Supabase (Postgres + login Google + RLS), migrations em `supabase/migrations/`
 - **IA** — camada própria sobre modelo de linguagem trocável (agente escrito à mão, sem frameworks)
 
@@ -39,4 +41,5 @@ O login é restrito a um único e-mail (`OWNER_EMAIL`) — o site é pessoal por
 - ✅ **Fase 0 — Fundação**: monorepo, sidebar com os andares, login Google travado no dono, RLS ([docs/fase-0.md](./docs/fase-0.md))
 - ✅ **Fase 1 — Faculdade + Hoje**: semestre, cadeiras, horários, notas e faltas; Hoje com próxima aula e provas próximas ([docs/fase-1.md](./docs/fase-1.md))
 - ✅ **Fase 2 — Rotina + Projetos**: hábitos com sequência, semana-tipo com janelas livres, projetos e tarefas; Hoje completo ([docs/fase-2.md](./docs/fase-2.md))
-- 🔨 **Fase 3 — Orion falando**: a seguir
+- ✅ **Fase 3 — Orion falando**: camada própria de IA sobre as actions do core, propostas com aprovação, aba no site e bot no Telegram ([docs/fase-3.md](./docs/fase-3.md))
+- 🔨 **Fase 4 — Orion acordando**: a seguir

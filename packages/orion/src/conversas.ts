@@ -1,7 +1,8 @@
 import type { ActionContext } from "@orion/core";
 import type { Message } from "./types";
 
-export type Canal = "web" | "telegram";
+/** Por onde a conversa entrou. O canal em si mora em channels/. */
+export type NomeDoCanal = "web" | "telegram";
 
 interface LinhaDeMensagem {
   role: Message["role"];
@@ -13,7 +14,7 @@ interface LinhaDeMensagem {
 /** A conversa aberta do canal, ou uma nova. Uma por canal, contínua. */
 export async function conversaAtual(
   { supabase, userId }: ActionContext,
-  canal: Canal,
+  canal: NomeDoCanal,
 ): Promise<string> {
   const { data: existente, error: erroBusca } = await supabase
     .from("orion_conversations")

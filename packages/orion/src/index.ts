@@ -9,3 +9,4 @@ export * from "./conversas";
 export * from "./propostas";
 export * from "./resumo-texto";
 export * from "./orion";
+export * from "./channels";

@@ -1,5 +1,5 @@
 import { agoraNoFuso, hoje, type ActionContext } from "@orion/core";
-import { conversaAtual, historico, salvarMensagens, type Canal } from "./conversas";
+import { conversaAtual, historico, salvarMensagens, type NomeDoCanal } from "./conversas";
 import { rodarTurno } from "./loop";
 import { lembretes } from "./memoria";
 import { montarSystemPrompt } from "./prompt";
@@ -27,7 +27,7 @@ export async function responder({
   ctx: ActionContext;
   provider: LLMProvider;
   texto: string;
-  canal?: Canal;
+  canal?: NomeDoCanal;
 }): Promise<RespostaDaOrion> {
   const agora = agoraNoFuso();
 
